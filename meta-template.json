@@ -1,0 +1,13 @@
+{
+    "metadata": {
+        "creators":[{"name":"WikiPathways","affiliation":"WikiPathways.org"}],
+        "communities":[{"identifier":"wikipathways"}],
+        "description":"Monthly data release from WikiPathways.org",
+        "upload_type":"dataset",
+        "keywords":["pathway","biology"],
+        "references":["Pico AR, Kelder T, van Iersel MP, Hanspers K, Conklin BR, Evelo C. WikiPathways: pathway editing for the people. PLoS Biol. 2008 Jul 22;6(7):e184. doi: 10.1371/journal.pbio.0060184. PMID: 18651794; PMCID: PMC2475545."],
+        "title":"XXX",
+        "version":"XXX",
+        "publication_date":"XXX"
+    }
+}
