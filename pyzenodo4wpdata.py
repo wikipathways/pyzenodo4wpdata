@@ -56,6 +56,8 @@ if args.debug:
 # GET request to query for deposition of earlier versions
 r = requests.get(f"{baseurl}/records",
                         params={'communities':'wikipathways',
+                        'size':100,
+                        'all_versions':0,
                         'access_token': f"{args.token}"})
 if args.debug:
     print(f"\nPrinting first hit only: {json.dumps(list(r.json()['hits']['hits'])[0], indent=2)}")
