@@ -7,7 +7,7 @@ See the example shell script `monthly-depo.sh`, which is specific to archiving G
  * -d -- Debug mode. Nothing will actually be uploaded to Zenodo, but most of the code will be run.
  * -n -- No publish. Do everything except publish. This final step can easily be done on the GUI, if you're only testing or unsure.
 
-Note: there is a 1 second pause in the example shell script to keep within the 100/minute rate limit for the Zenodo REST API.
+Note: there is a 100/minute rate limit for the Zenodo REST API requests.
 
  ## Access Token
  You will need a Zenodo access token to run the Zenodo API steps in this script:

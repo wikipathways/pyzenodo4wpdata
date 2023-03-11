@@ -20,21 +20,23 @@ args = parser.parse_args()
 with open(args.meta, 'r') as f:
     data = json.load(f)
 fn = os.path.basename(args.file)
+file_name, file_ext = os.path.splitext(fn)
+parts = file_name.split("-")
+pre_title = "XXX for "
+if file_ext == ".gmt":
+    pre_title = "GMT file for "
+elif file_ext == ".zip":
+    pre_title = "GPML files for "
+this_title = pre_title + parts[-1].replace("_"," ") + " pathways"
 release = int(args.release)
 year = str(release // 10000)
 month = str((release // 100) % 100).zfill(2)
 day = str(release % 100).zfill(2)
 pubdate = f"{year}-{month}-{day}"
-data['metadata']['title'] = fn
+data['metadata']['title'] = this_title
 data['metadata']['version'] = args.release
 data['metadata']['publication_date'] = pubdate
 #print(json.dumps(data))
-
-# extract query from filename
-timestamp_start = fn.find("-") + 1
-timestamp_end = fn.find("-", timestamp_start)
-extension_start = fn.rfind(".") + 1
-fnquery = fn[timestamp_end:extension_start]
 
 # api baseurl
 baseurl = f"https://zenodo.org/api"
@@ -76,12 +78,12 @@ if args.debug:
 # If not, then create a project
 deposition_id = ""
 for key in title_id_dict:
-    if fnquery in key:
+    if this_title in key:
         deposition_id=title_id_dict[key]
         bucket_link=id_bucket_dict[deposition_id]
 
 if deposition_id:
-    print(f"\nFound earlier version of {fnquery}. Creating a new version of {deposition_id}.")
+    print(f"\nFound earlier version of {this_title}. Creating a new version of {deposition_id}.")
     if not args.debug:
         # POST request to create new version
         r = requests.post(f"{baseurl}/deposit/depositions/{deposition_id}/actions/newversion",
