@@ -56,20 +56,24 @@ if args.debug:
     print(f"\nDEBUG: status code: {r.status_code}.")
 
 # GET request to query for deposition of earlier versions
-r = requests.get(f"{baseurl}/records",
-                        params={'communities':'wikipathways',
-                        'size':100,
-                        'all_versions':0,
-                        'access_token': f"{args.token}"})
-if args.debug:
-    print(f"\nPrinting first hit only: {json.dumps(list(r.json()['hits']['hits'])[0], indent=2)}")
-title_id_dict = {}
-#id_bucket_dict = {} #Not used and no longer provided by Zenodo API
-for obj in r.json()['hits']['hits']:
-    if "id" in obj and "metadata" in obj:
-        title_id_dict[obj["metadata"]["title"]] = obj["id"]
-    #if "id" in obj and "links" in obj:
-        #id_bucket_dict[obj["id"]] = obj["links"]['bucket']
+try:
+    r = requests.get(f"{baseurl}/records",
+                    params={'communities':'wikipathways',
+                    'size':100,
+                    'all_versions':0,
+                    'access_token': f"{args.token}"})
+    title_id_dict = {}
+    try:
+        for obj in r.json()['hits']['hits']:
+            if "id" in obj and "metadata" in obj:
+                title_id_dict[obj["metadata"]["title"]] = obj["id"]
+    except (json.JSONDecodeError, KeyError) as e:
+        print(f"\nWarning: Could not process Zenodo records for {fn}, continuing with new upload...")
+        title_id_dict = {}  # Reset to empty dict to force new upload
+except requests.exceptions.RequestException as e:
+    print(f"\nWarning: Could not connect to Zenodo for {fn}, continuing with new upload...")
+    title_id_dict = {}  # Reset to empty dict to force new upload
+
 print(f"\nTitle-ID mappings: {title_id_dict}")
 #if args.debug:
     #print(f"\nID-Bucket mappings: {id_bucket_dict}")
