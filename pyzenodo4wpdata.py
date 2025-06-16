@@ -89,23 +89,53 @@ for key in title_id_dict:
 if deposition_id:
     print(f"\nFound earlier version of {this_title}. Creating a new version of {deposition_id}.")
     if not args.debug:
-        # POST request to create new version
-        r = requests.post(f"{baseurl}/deposit/depositions/{deposition_id}/actions/newversion",
-                  params=params)
-        print(r.status_code)
-        print(json.dumps(r.json(), indent=2))
+        try:
+            # POST request to create new version
+            r = requests.post(f"{baseurl}/deposit/depositions/{deposition_id}/actions/newversion",
+                      params=params)
+            print(r.status_code)
+            print(json.dumps(r.json(), indent=2))
+            
+            if r.status_code == 400 and "Please remove all files first" in str(r.json()):
+                print("\nRemoving existing files before creating new version...")
+                # First get the current version to find files
+                r = requests.get(f"{baseurl}/deposit/depositions/{deposition_id}",
+                          params=params)
+                if r.status_code == 200:
+                    files = r.json().get('files', [])
+                    for file in files:
+                        file_id = file.get('id')
+                        if file_id:
+                            print(f"Removing file {file_id}")
+                            r = requests.delete(f"{baseurl}/deposit/depositions/{deposition_id}/files/{file_id}",
+                                        params=params)
+                            print(f"Delete status: {r.status_code}")
+                    
+                    # Now try creating new version again
+                    r = requests.post(f"{baseurl}/deposit/depositions/{deposition_id}/actions/newversion",
+                              params=params)
+                    print(f"New version creation status: {r.status_code}")
+                    print(json.dumps(r.json(), indent=2))
+            
+            if r.status_code != 201:  # 201 is success for new version creation
+                print(f"Error creating new version: {r.status_code}")
+                print("Falling back to creating new deposition...")
+                deposition_id = ""  # Reset to create new deposition
+            else:
+                deposition_id = r.json()['links']['latest_draft'].split("/")[-1]
+                bucket_link = r.json()['links']['bucket']
+                
+        except (KeyError, json.JSONDecodeError) as e:
+            print(f"Error processing new version response: {str(e)}")
+            print("Falling back to creating new deposition...")
+            deposition_id = ""  # Reset to create new deposition
+        except requests.exceptions.RequestException as e:
+            print(f"Error in API request: {str(e)}")
+            print("Falling back to creating new deposition...")
+            deposition_id = ""  # Reset to create new deposition
 
-        deposition_id = r.json()['links']['latest_draft'].split("/")[-1]
-        bucket_link = r.json()['links']['bucket'] #can only get bucket id from here now
-        prior_version_file = r.json()['files'][0]['id'] 
-
-        print(f"\nDeleting prior version of file {prior_version_file}.")
-        # DELETE request to clear out prior version file from this new version
-        r = requests.delete(f"{baseurl}/deposit/depositions/{deposition_id}/files/{prior_version_file}",
-                    params=params)
-        print(r.status_code)
-else:
-    print(f"\nNo earlier version found. Creating a new project.")
+if not deposition_id:
+    print(f"\nCreating a new project.")
     if not args.debug:
         # POST request to create project
         r = requests.post(f"{baseurl}/deposit/depositions", 
